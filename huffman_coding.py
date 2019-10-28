@@ -2,6 +2,7 @@ import numpy as np
 from sklearn.cluster import KMeans
 from pruned_layers import *
 import torch.nn as nn
+import heapq
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -26,6 +27,90 @@ def _huffman_coding_per_layer(weight, centers):
     Generate Huffman Coding and Frequency Map according to incoming weights and centers (KMeans centriods).
     --------------Your Code---------------------
     """
+    encodings = {}
+    frequency = {}
+    huffman_tree = [None] * 3
+    temp_tree = [None] * 3
+    
+    # Update frequencies
+    for weight in centers:
+        if weight[0] in frequency.keys():
+            frequency[weight[0]] = frequency.get(weight[0]) + 1
+        else:
+            frequency[weight[0]] = 1
+            
+        if weight[0] not in encodings.keys():
+            encodings[weight[0]] = []
+    
+    sorted_freq = sorted(frequency.items() , reverse=False, key=lambda x: x[1])
+    huffman_tree[0] = list(sorted_freq[0])
+    huffman_tree[0].append(1)
+    huffman_tree[1] = list(sorted_freq[1])
+    huffman_tree[1].append(0)
+    huffman_tree[2] = sorted_freq[0][1] + sorted_freq[1][1] #combined frequency value
+    #print(sorted_freq)
+    
+    # Create Huffman Tree
+    i = 2
+    pos = 3
+    while i < len(sorted_freq):
+        node1 = list(sorted_freq[i]) 
+        node2 = list(sorted_freq[i + 1])
+
+        # Can add the node to the tree
+        if node1[1] >= huffman_tree[pos-1]:
+            node1.append(0)
+            huffman_tree.append(node1)
+            huffman_tree.append( huffman_tree[pos-1] + node1[1] )
+            pos += 2
+            
+            # If there are any nodes to add from previous iteration
+            if temp_tree[0] != None:
+                huffman_tree.append(temp_tree[0])
+                huffman_tree.append(temp_tree[1])
+                huffman_tree.append( temp_tree[2] + huffman_tree[pos - 1] )
+
+                temp_tree = [None] * 3
+                pos += 3
+                
+        # Frequency of the node is too small
+        else:
+            if temp_tree[0] != None:
+                huffman_tree.append(temp_tree[0])
+                huffman_tree.append(temp_tree[1])
+                huffman_tree.append( temp_tree[2] + huffman_tree[pos - 1] )
+                pos += 3
+
+            node1.append(1)
+            node2.append(0)
+            temp_tree[0] = node1
+            temp_tree[1] = node2
+            temp_tree[2] = node1[1] + node2[1]
+            i += 1
+                
+        # On the final node
+        if i + 2 >= len(sorted_freq)and temp_tree[0] != None:
+                huffman_tree.append(temp_tree[0])
+                huffman_tree.append(temp_tree[1])
+                huffman_tree.append( temp_tree[2] + huffman_tree[pos - 1] )
+        i += 1
+    #print(huffman_tree)
+    
+    # Set encodings
+    for key in encodings.keys():
+        found = False
+        num_internal = 0
+        
+        for node in huffman_tree:
+            if type(node) is not int and node[0] == key:
+                found = True
+                encodings[key].append(node[2])
+                
+            elif found and type(node) is int:
+                if num_internal > 0:
+                    encodings[key].append(1) #= encodings[key] + (10 ** num_internal)
+                num_internal += 1
+    print(encodings)
     return encodings, frequency
 
 

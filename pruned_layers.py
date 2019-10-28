@@ -37,6 +37,33 @@ class PruneLinear(nn.Module):
         with pruned connections.
         --------------Your Code---------------------
         """
+        total_weights = 0
+        pruned_weights = 0
+        
+        # Changing to cpu to allow use of numpy functions
+        og_device = device
+        if og_device == 'cuda':
+            self.linear = self.linear.cpu()
+        
+        # Calculating threshold value
+        weights = torch.abs(self.linear.weight.data)
+        thresh = np.percentile(weights, q)
+        
+        # Updating weights
+        self.mask = torch.abs(self.linear.weight.data) < thresh
+        mask = torch.ones(self.mask.size()) - self.mask.float()
+        self.linear.weight.data *= mask
+        pruned_weights += self.mask.numel()
+        total_weights += self.linear.weight.data.numel()
+                
+        # Calculating and storing the sparsity
+        self.sparsity = pruned_weights / total_weights
+        self.mask = torch.abs(self.linear.weight.data) >= thresh
+        
+        # Returning to original device
+        if og_device == 'cuda':
+            self.linear = self.linear.to(device)
+            
         pass
 
 
@@ -55,6 +82,33 @@ class PruneLinear(nn.Module):
         with pruned connections.
         --------------Your Code---------------------
         """
+        total_weights = 0
+        pruned_weights = 0
+        
+        # Changing to cpu to allow use of numpy functions
+        og_device = device
+        if og_device == 'cuda':
+            self.linear = self.linear.cpu()
+        
+        # Calculating threshold value
+        weights = torch.abs(self.linear.weight.data)
+        thresh = weights.std() * s
+        
+        # Updating weights
+        self.mask = torch.abs(self.linear.weight.data) < thresh
+        mask = torch.ones(self.mask.size()) - self.mask.float()
+        self.linear.weight.data *= mask
+        pruned_weights += self.mask.numel()
+        total_weights += self.linear.weight.data.numel()
+                
+        # Calculating and storing the sparsity
+        self.sparsity = pruned_weights / total_weights
+        self.mask = torch.abs(self.linear.weight.data) >= thresh
+        
+        # Returning to original device
+        if og_device == 'cuda':
+            self.linear = self.linear.to(device)
+        
         pass
 
 class PrunedConv(nn.Module):
@@ -94,7 +148,32 @@ class PrunedConv(nn.Module):
         with pruned connections.
         --------------Your Code---------------------
         """
+        total_weights = 0
+        pruned_weights = 0
         
+        # Changing to cpu to allow use of numpy functions
+        og_device = device
+        if og_device == 'cuda':
+            self.conv = self.conv.cpu()
+        
+        # Calculating threshold value
+        weights = torch.abs(self.conv.weight.data)
+        thresh = np.percentile(weights, q)
+        
+        # Updating weights
+        self.mask = torch.abs(self.conv.weight.data) < thresh
+        mask = torch.ones(self.mask.size()) - self.mask.float()
+        self.conv.weight.data *= mask
+        pruned_weights += self.mask.numel()
+        total_weights += self.conv.weight.data.numel()
+                
+        # Calculating and storing the sparsity
+        self.sparsity = pruned_weights / total_weights
+        self.mask = torch.abs(self.conv.weight.data) >= thresh
+        
+        # Returning to original device
+        if og_device == 'cuda':
+            self.conv = self.conv.to(device)
 
     def prune_by_std(self, s=0.25):
         """
@@ -111,5 +190,32 @@ class PrunedConv(nn.Module):
         with pruned connections.
         --------------Your Code---------------------
         """
+        total_weights = 0
+        pruned_weights = 0
+        
+        # Changing to cpu to allow use of numpy functions
+        og_device = device
+        if og_device == 'cuda':
+            self.conv = self.conv.cpu()
+        
+        # Calculating threshold value
+        weights = torch.abs(self.conv.weight.data)
+        thresh = weights.std() * s
+        
+        # Updating weights
+        self.mask = torch.abs(self.conv.weight.data) < thresh
+        mask = torch.ones(self.mask.size()) - self.mask.float()
+        self.conv.weight.data *= mask
+        pruned_weights += self.mask.numel()
+        total_weights += self.conv.weight.data.numel()
+                
+        # Calculating and storing the sparsity
+        self.sparsity = pruned_weights / total_weights
+        self.mask = torch.abs(self.conv.weight.data) >= thresh
+        
+        # Returning to original device
+        if og_device == 'cuda':
+            self.conv = self.conv.to(device)
+        
         pass
 

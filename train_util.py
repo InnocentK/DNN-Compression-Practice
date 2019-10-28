@@ -160,6 +160,10 @@ def finetune_after_prune(net, epochs=100, batch_size=128, lr=0.01, reg=5e-4):
             Zero the gradients of the pruned variables.
             -----------------------Your Code-------------------------
             """
+            for i,param in enumerate(net.parameters()):
+                mask = param.data != 0
+                mask = mask.float()
+                param.grad.data *= mask
 
             optimizer.step()
             train_loss += loss.item()

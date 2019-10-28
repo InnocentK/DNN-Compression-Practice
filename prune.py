@@ -13,4 +13,3 @@ def prune(net, method='std', q=5.0, s=0.25):
                 m.prune_by_percentage(q)
             elif method == 'std':
                 m.prune_by_std(s)
-
