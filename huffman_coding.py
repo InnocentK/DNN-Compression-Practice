@@ -110,7 +110,7 @@ def _huffman_coding_per_layer(weight, centers):
                 if num_internal > 0:
                     encodings[key].append(1) #= encodings[key] + (10 ** num_internal)
                 num_internal += 1
-    print(encodings)
+    #print(encodings)
     return encodings, frequency
 
 
